@@ -10,8 +10,8 @@ namespace RavenDB.Tryout.App
             {
                 var store = new DocumentStore
                 {
-                    Urls = new[] { "http://localhost:8080","http://127.0.0.2:8080","http://127.0.0.3:8080" },
-                    Database = "CRUD"
+                    Urls = new[] { "http://localhost:8080" },
+                    Database = databaseName
                 };
 
                 return store.Initialize();

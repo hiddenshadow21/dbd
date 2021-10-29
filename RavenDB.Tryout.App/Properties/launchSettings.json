@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "RavenDB.Tryout.App": {
-      "commandName": "Project",
-      "commandLineArgs": "update"
-    }
-  }
-}
