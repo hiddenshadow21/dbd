@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Raven.Client.Documents;
+using RavenDB.Tryout.App.Models;
 
 namespace RavenDB.Tryout.App
 {
@@ -11,8 +13,11 @@ namespace RavenDB.Tryout.App
                 var store = new DocumentStore
                 {
                     Urls = new[] { "http://localhost:8080" },
-                    Database = databaseName
+                    Database = "Zadanie2"
                 };
+
+                store.Conventions.RegisterAsyncIdConvention<History>(
+                    (dbname, history) => Task.FromResult(string.Format("{0}/history", history.UserId)));
 
                 return store.Initialize();
             });

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using RavenDB.Tryout.App.Models;
+using System;
+using System.Linq;
 
 namespace RavenDB.Tryout.App
 {
@@ -52,37 +54,93 @@ namespace RavenDB.Tryout.App
 
         private static void CreateUser()
         {
-            throw new NotImplementedException("TODO");
+            using (var session = DocumentStoreHolder.Store.OpenSession())
+            {
+                var user = new User
+                {
+                    FirtsName = "B",
+                    LastName = "P"
+                };
+
+                session.Store(user);
+                session.SaveChanges();
+            }
         }
 
         private static void CreateGroup()
         {
-            throw new NotImplementedException("TODO");
+            using (var session = DocumentStoreHolder.Store.OpenSession())
+            {
+                var group = new Group
+                {
+                    Name = "test"
+                };
+
+                session.Store(group);
+                session.SaveChanges();
+            }
         }
 
         private static void AddUserToGroup()
         {
-            throw new NotImplementedException("TODO");
+            var groupId = "groups/1";
+            var userId = "user/1";
+            using (var session = DocumentStoreHolder.Store.OpenSession())
+            {
+                var user = session.Load<User>(userId);
+                
+                user.GroupId = groupId;
+
+                session.SaveChanges();
+            }
         }
 
         private static void ShowGroupUsers()
         {
-            throw new NotImplementedException("TODO");
+            var groupId = "groups/1";
+
+            using (var session = DocumentStoreHolder.Store.OpenSession())
+            {
+                var users = session.Query<User>().Where(x=> x.GroupId == groupId);
+
+                foreach (var user in users)
+                {
+                    Console.WriteLine(user);
+                }
+            }
         }
 
         private static void RemoveUserFromGroup()
         {
-            throw new NotImplementedException("TODO");
+            var userId = "user/1";
+            using (var session = DocumentStoreHolder.Store.OpenSession())
+            {
+                var user = session.Load<User>(userId);
+
+                user.GroupId = "";
+
+                session.SaveChanges();
+            }
         }
 
         private static void DeleteUser()
         {
-            throw new NotImplementedException("TODO");
+            var userId = "user/1";
+            using (var session = DocumentStoreHolder.Store.OpenSession())
+            {
+                session.Delete(userId);
+                session.SaveChanges();
+            }
         }
 
         private static void ShowUserActivity()
         {
-            throw new NotImplementedException("TODO");
+            var userId = "user/1";
+            using (var session = DocumentStoreHolder.Store.OpenSession())
+            {
+                var userHistory = session.Load<History>(userId + "/history");
+                Console.WriteLine(userHistory.LastSuccesfullLogin);
+            }
         }
     }
 }
