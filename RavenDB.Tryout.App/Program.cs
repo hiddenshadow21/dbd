@@ -101,7 +101,7 @@ namespace RavenDB.Tryout.App
 
             using (var session = DocumentStoreHolder.Store.OpenSession())
             {
-                var users = session.Query<User>().Where(x=> x.GroupId == groupId);
+                var users = session.Query<User>().Where(x=> x.GroupId == groupId).ToList();
 
                 foreach (var user in users)
                 {
