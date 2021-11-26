@@ -1,146 +1,100 @@
-﻿using RavenDB.Tryout.App.Models;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Raven.Client.Documents.Linq;
+using Raven.Client.Documents.Session;
+using RavenDB.Tryout.App.Models;
 
 namespace RavenDB.Tryout.App
 {
     class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            if (args.Length == 0)
-            {
-                Console.WriteLine("No argument provided.");
-                return;
-            }
-            
-            var arg = args[0];
+            //Z1();
+            Z3();
+            Z5();
+        }
 
-            switch (arg)
+        private static void Z3()
+        {
+            List<Employee> filteredEmployees;
+
+            using (IDocumentSession session = DocumentStoreHolder.Store.OpenSession())
             {
-                case "create-user":
-                    CreateUser();
-                    break;
-                
-                case "create-group":
-                    CreateGroup();
-                    break;
-                
-                case "add-user-to-group":
-                    AddUserToGroup();
-                    break;
-                
-                case "show-group-users":
-                    ShowGroupUsers();
-                    break;
-                
-                case "remove-user-from-group":
-                    RemoveUserFromGroup();
-                    break;
-                
-                case "delete-user":
-                    DeleteUser();
-                    break;
-                
-                case "show-user-activity":
-                    ShowUserActivity();
-                    break;
-                
-                default:
-                    Console.WriteLine("No matching argument provided.");
-                    break;
+
+                string country = "set";
+                var filteredQuery = session.Query<Employee>()
+                    .Where(x =>
+                        x.FirstName.In("Anne", "John") ||
+
+                        (x.Address.Country == country &&
+                         x.Territories.Count > 2 &&
+                         x.Title.StartsWith("Sales")));
+
+                filteredEmployees = filteredQuery.ToList();
             }
         }
 
-        private static void CreateUser()
+        private static void Z5()
         {
             using (var session = DocumentStoreHolder.Store.OpenSession())
             {
-                var user = new User
+                var projectedQueryWithFunctions = from employee in session.Query<Employee>()
+
+                    let formatTitle = (Func<Employee, string>)(e => "Title: " + e.Title)
+                    let formatName = (Func<Employee, string>)(e => "Name: " + e.FirstName + " " + e.LastName)
+
+                    select new EmployeeDetails
+                    {
+                        Title = formatTitle(employee),
+                        Name = formatName(employee)
+                    };
+
+                var projectedResults = projectedQueryWithFunctions.ToList();
+                foreach (var projectedResult in projectedResults)
                 {
-                    FirtsName = "B",
-                    LastName = "P"
-                };
-
-                session.Store(user);
-                session.SaveChanges();
-            }
-        }
-
-        private static void CreateGroup()
-        {
-            using (var session = DocumentStoreHolder.Store.OpenSession())
-            {
-                var group = new Group
-                {
-                    Name = "test"
-                };
-
-                session.Store(group);
-                session.SaveChanges();
-            }
-        }
-
-        private static void AddUserToGroup()
-        {
-            var groupId = "groups/1";
-            var userId = "user/1";
-            using (var session = DocumentStoreHolder.Store.OpenSession())
-            {
-                var user = session.Load<User>(userId);
-                
-                user.GroupId = groupId;
-
-                session.SaveChanges();
-            }
-        }
-
-        private static void ShowGroupUsers()
-        {
-            var groupId = "groups/1";
-
-            using (var session = DocumentStoreHolder.Store.OpenSession())
-            {
-                var users = session.Query<User>().Where(x=> x.GroupId == groupId).ToList();
-
-                foreach (var user in users)
-                {
-                    Console.WriteLine(user);
+                    
+                    Console.WriteLine(projectedResult.Title);
                 }
             }
         }
 
-        private static void RemoveUserFromGroup()
+        private static void Z1()
         {
-            var userId = "user/1";
+            int companyId = 13;
+            string companyReference = $"companies/{companyId}-A";
+
             using (var session = DocumentStoreHolder.Store.OpenSession())
             {
-                var user = session.Load<User>(userId);
+                var orders = session.Advanced.RawQuery<Order>(
+                        "from Orders " +
+                        "where Company== $companyId " +
+                        "include Company"
+                    ).AddParameter("companyId", companyReference)
+                    .ToList();
 
-                user.GroupId = "";
+                var company = session.Load<Company>(companyReference);
 
-                session.SaveChanges();
+                if (company == null)
+                {
+                    Console.WriteLine("Company not found.");
+                    return;
+                }
+
+                Console.WriteLine($"Orders for {company.Name}");
+
+                foreach (var order in orders)
+                {
+                    Console.WriteLine($"{order.Id} - {order.OrderedAt}");
+                }
             }
         }
+    }
 
-        private static void DeleteUser()
-        {
-            var userId = "user/1";
-            using (var session = DocumentStoreHolder.Store.OpenSession())
-            {
-                session.Delete(userId);
-                session.SaveChanges();
-            }
-        }
-
-        private static void ShowUserActivity()
-        {
-            var userId = "user/1";
-            using (var session = DocumentStoreHolder.Store.OpenSession())
-            {
-                var userHistory = session.Load<History>(userId + "/history");
-                Console.WriteLine(userHistory.LastSuccesfullLogin);
-            }
-        }
+    internal class EmployeeDetails
+    {
+        public string Title { get; set; }
+        public string Name { get; set; }
     }
 }
