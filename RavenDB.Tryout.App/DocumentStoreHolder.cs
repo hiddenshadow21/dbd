@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Cryptography.X509Certificates;
 using Raven.Client.Documents;
 
 namespace RavenDB.Tryout.App
@@ -10,8 +11,9 @@ namespace RavenDB.Tryout.App
             {
                 var store = new DocumentStore
                 {
-                    Urls = new[] { "http://localhost:8080" },
-                    Database = databaseName
+                    Urls = new[] { "https://a.qa-tests.development.run/" },
+                    Database = "CRUD",
+                    Certificate = new X509Certificate2(@"C:\Users\Bartosz Piekarski\Downloads\qa-tests.Cluster.Settings\admin.client.certificate.qa-tests.pfx")
                 };
 
                 return store.Initialize();
