@@ -1,69 +1,59 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Raven.Client.Documents;
-using Raven.Client.Documents.Linq;
-using Raven.Client.Documents.Session;
-using RavenDB.Tryout.App.Models;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace RavenDB.Tryout.App
 {
     class Program
     {
-        public static void Main(string[] args)
-        {
-            //new Employees_ByFirstNameAndLastName().Execute(DocumentStoreHolder.Store);
-            //new People_Search().Execute(DocumentStoreHolder.Store);
-            
-            using (var session = DocumentStoreHolder.Store.OpenSession())
-            {
-                var employees = session
-                    .Query<Employees_ByFirstNameAndLastName.Result, Employees_ByFirstNameAndLastName>()
-                    .Where(x => x.WorkingYears >= 30)
-                    .Select(x=> new
-                    {
-                        x.FullName,
-                        x.WorkingYears
-                    })
-                    .ToList();
-                
-                foreach (var employee in employees)
-                {
-                    Console.WriteLine(employee.FullName);
-                }
-            }
-            
-            Console.Title = "Multi-map sample";
-            using (var session = DocumentStoreHolder.Store.OpenSession())
-            {
-                while (true)
-                {
-                    Console.Write("\nSearch terms: ");
-                    var searchTerms = Console.ReadLine();
-                    if(string.IsNullOrEmpty(searchTerms))
-                        break;
-                    foreach (var result in Search(session, searchTerms))
-                    {
-                        Console.WriteLine($"{result.SourceId}\t{result.Type}\t{result.Name}");
-                    }
-                }
-            }
-        }
+        private static readonly Random _random = new Random();
         
-        public static IEnumerable<People_Search.Result> Search(
-            IDocumentSession session,
-            string searchTerms
-        )
+        static void Main(string[] args)
         {
-            var results = session.Query<People_Search.Result, People_Search>()
-                .Search(
-                    r => r.Name,
-                    searchTerms
-                )
-                .ProjectInto<People_Search.Result>()
-                .ToList();
 
-            return results;
+            // 1. Create document in collection: TermsAndConditions
+            
+            //TODO
+            
+            // 2. Create attachment for newly created document (256 KB in size)
+
+            //TODO:
+
+            // 3. Calculate md5 of attachment
+
+            // TODO
+
+            // 4. Modify attachment 2 times (using different random generated data) and save
+            // calculate md5 of each new attachment and store
+
+            //TODO
+
+            // 5. Download 3 versions of document and attachments 
+            // compare md5 with stored one
+
+            // TODO
+        }
+
+        private static byte[] GenerateRandomBytes(int length)
+        {
+            var result = new byte[length];
+            _random.NextBytes(result);
+            return result;
+        }
+
+        private static string ComputeHash(byte[] input)
+        {
+            using (var md5 = MD5.Create())
+            {
+                var hashBytes = md5.ComputeHash(input);
+                StringBuilder sb = new StringBuilder();
+                foreach (var t in hashBytes)
+                {
+                    sb.Append(t.ToString("X2"));
+                }
+                return sb.ToString();
+            }
         }
     }
 }
